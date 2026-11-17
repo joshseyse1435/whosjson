@@ -277,25 +277,29 @@ const EVIDENCE = [
     links: ["subject"],
     pos: { wide: [960, 40], tall: [214, 690] }, w: { wide: 210, tall: 200 }, rot: -3 },
 
-  { id: "day2", type: "redacted", day: 2, links: ["day1"],
-    pos: { wide: [1050, 560], tall: [24, 1150] }, w: { wide: 210, tall: 190 }, rot: 4 },
+  { id: "day2", type: "exhibit", day: 2, title: "Day 2: Building the tip line",
+    date: "Nov 2026", vertical: true,
+    video: "media/day2.mp4", loop: "media/day2-loop.mp4", poster: "media/day2-poster.jpg",
+    summary: "The subject sketches the plan on paper: the site sends tips to a Vercel API, which saves them in a Supabase database. About 20 minutes of building later, the anonymous tip line is live. Every tip waits for his approval before it goes on file.",
+    links: ["day1"],
+    pos: { wide: [1180, 500], tall: [24, 1150] }, w: { wide: 190, tall: 200 }, rot: 3 },
   { id: "day3", type: "redacted", day: 3, links: ["day2"],
-    pos: { wide: [760, 640], tall: [236, 1330] }, w: { wide: 210, tall: 190 }, rot: -2 },
+    pos: { wide: [870, 600], tall: [246, 1330] }, w: { wide: 210, tall: 190 }, rot: -2 },
   { id: "day4", type: "redacted", day: 4, links: ["subject", "day3"],
-    pos: { wide: [300, 560], tall: [30, 1530] }, w: { wide: 210, tall: 190 }, rot: 3 },
+    pos: { wide: [330, 600], tall: [30, 1640] }, w: { wide: 210, tall: 190 }, rot: 3 },
 
   { id: "tipline", type: "tipline",
-    pos: { wide: [1085, 770], tall: [28, 1765] }, w: { wide: 260, tall: 210 }, rot: -2 },
+    pos: { wide: [870, 830], tall: [236, 1580] }, w: { wide: 260, tall: 210 }, rot: -2 },
 
   { id: "n1", type: "note", text: "6 months.<br>all in.", color: "",
     pos: { wide: [120, 330], tall: [270, 60] }, w: { wide: 160, tall: 150 }, rot: -5 },
   { id: "n2", type: "note", text: "183 days.<br>what is he building??", color: "pink",
-    pos: { wide: [1205, 390], tall: [16, 800] }, w: { wide: 170, tall: 150 }, rot: 6 },
+    pos: { wide: [1215, 330], tall: [16, 800] }, w: { wide: 170, tall: 150 }, rot: 6 },
   { id: "n3", type: "note", text: "Who's JSON?", color: "blue",
-    pos: { wide: [470, 800], tall: [250, 1730] }, w: { wide: 170, tall: 150 }, rot: -3 }
+    pos: { wide: [540, 850], tall: [262, 1790] }, w: { wide: 170, tall: 150 }, rot: -3 }
 ];
 
-const BOARD = { wide: { w: 1400, h: 970 }, tall: { w: 460, h: 1990 } };
+const BOARD = { wide: { w: 1400, h: 1010 }, tall: { w: 460, h: 1900 } };
 
 /* ---------------- rendering ---------------- */
 const board = document.getElementById("board");
