@@ -136,6 +136,11 @@ svg.strings { position: absolute; inset: 0; z-index: 20; pointer-events: none; o
 .indexcard dd { margin: 0; }
 .indexcard .open { color: var(--stamp); font-weight: 700; }
 
+.tipline .line1 { color: var(--stamp); }
+.tipline h3 { font-family: var(--f-type); font-weight: normal; font-size: 24px; line-height: 1.05; margin: 10px 0 6px; }
+.tipline p { margin: 0; font-size: 14px; line-height: 22px; }
+.tipline .count { margin-top: 6px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
 .note {
   background: var(--note); padding: 16px 14px 18px;
   font-family: var(--f-hand); font-size: 21px; line-height: 1.15; color: #2a2306;
@@ -186,6 +191,27 @@ dialog.file::backdrop { background: rgba(8,5,2,.72); }
 .folder .media video { display: block; margin: 0 auto; max-width: 100%; max-height: 68vh; height: auto; background: #000; }
 .folder .media iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
 .folder .media.vertical iframe { aspect-ratio: 9 / 16; max-height: 68vh; width: auto; margin: 0 auto; }
+.tipform { display: grid; gap: 6px; margin-top: 4px; }
+.tipform label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.tipform input, .tipform textarea {
+  font: 16px/1.45 var(--f-body); color: var(--ink); background: #fff;
+  border: 1.5px solid #b9a97f; border-radius: 0; padding: 9px 11px; width: 100%;
+}
+.tipform textarea { resize: vertical; min-height: 110px; }
+.tipform input:focus-visible, .tipform textarea:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; border-color: var(--stamp); }
+.tipform .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.tipform .chars { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tipform button.watch { border: 0; cursor: pointer; }
+.tipform button.watch:disabled { opacity: .55; cursor: progress; }
+.tipform .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.tipstatus { min-height: 1.4em; margin: 6px 0 0 !important; font-size: 15px !important; }
+.tipstatus.ok { color: #1e5b2a; } .tipstatus.err { color: var(--stamp); }
+.folder h3 { font-family: var(--f-type); font-weight: normal; font-size: 20px; margin: 22px 0 10px; }
+.tips { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tips li { background: #fbf8f0; padding: 12px 14px; box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+.tips .msg { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.tips .who { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.tips .empty { color: var(--muted); background: transparent; box-shadow: none; padding: 0; }
 .folder .redline { height: 13px; background: var(--ink); margin: 10px 0; }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -258,6 +284,9 @@ const EVIDENCE = [
   { id: "day4", type: "redacted", day: 4, links: ["subject", "day3"],
     pos: { wide: [300, 560], tall: [30, 1530] }, w: { wide: 210, tall: 190 }, rot: 3 },
 
+  { id: "tipline", type: "tipline",
+    pos: { wide: [1085, 770], tall: [28, 1765] }, w: { wide: 260, tall: 210 }, rot: -2 },
+
   { id: "n1", type: "note", text: "6 months.<br>all in.", color: "",
     pos: { wide: [120, 330], tall: [270, 60] }, w: { wide: 160, tall: 150 }, rot: -5 },
   { id: "n2", type: "note", text: "183 days.<br>what is he building??", color: "pink",
@@ -266,7 +295,7 @@ const EVIDENCE = [
     pos: { wide: [470, 800], tall: [250, 1730] }, w: { wide: 170, tall: 150 }, rot: -3 }
 ];
 
-const BOARD = { wide: { w: 1400, h: 940 }, tall: { w: 460, h: 1940 } };
+const BOARD = { wide: { w: 1400, h: 970 }, tall: { w: 460, h: 1990 } };
 
 /* ---------------- rendering ---------------- */
 const board = document.getElementById("board");
@@ -319,6 +348,11 @@ function cardHTML(e) {
       <div class="tag">Exhibit ${letter(e)} &middot; Day ${e.day}</div>
       <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
       <div class="stampmark">Classified</div>`;
+    case "tipline": return `
+      <div class="line1">Anonymous tip line</div>
+      <h3>Know something?</h3>
+      <p>Leave a tip for the investigation.</p>
+      <p class="count" data-tipcount>Tips on file: &hellip;</p>`;
     case "note": return e.text;
   }
 }
@@ -327,9 +361,9 @@ function letter(e) {
   const i = seq.indexOf(e);
   return i < 26 ? String.fromCharCode(65 + i) : "A" + (i - 25);
 }
-const typeClass = { header: "indexcard", subject: "polaroid", exhibit: "exhibit", redacted: "redacted", note: "note" };
+const typeClass = { tipline: "indexcard tipline", header: "indexcard", subject: "polaroid", exhibit: "exhibit", redacted: "redacted", note: "note" };
 const labelFor = e => ({
-  header: "Case summary", subject: "Subject dossier",
+  tipline: "Anonymous tip line: leave a tip", header: "Case summary", subject: "Subject dossier",
   exhibit: `Exhibit ${letter(e)}: ${e.title}`, redacted: `Exhibit ${letter(e)}, Day ${e.day}: classified`,
   note: "Sticky note"
 }[e.type]);
@@ -476,6 +510,20 @@ function openFile(e) {
       <p>${esc(e.summary)}</p>
       ${e.video ? (local || yt ? "" : `<a class="watch" href="${esc(e.video)}" target="_blank" rel="noopener">&#9654; Watch the footage</a>`)
                 : `<div class="pending">Footage pending</div>`}</div>`;
+  } else if (e.type === "tipline") {
+    folder.dataset.tab = "Tip line";
+    html = `<h2 id="file-title">Anonymous tip line</h2><div class="sheet">
+      <p>Know something about the subject? Got an idea for an episode, or a challenge he should take on? Leave a tip. Every tip gets read, and the good ones go on file below.</p>
+      <form class="tipform" id="tip-form" novalidate>
+        <label for="tip-name">Name or alias (optional)</label>
+        <input id="tip-name" name="name" maxlength="40" autocomplete="nickname">
+        <label for="tip-message">Your tip</label>
+        <textarea id="tip-message" name="message" maxlength="500" required></textarea>
+        <div class="hp" aria-hidden="true"><label for="tip-website">Leave this empty</label><input id="tip-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <div class="row"><span class="chars" id="tip-chars">0 / 500</span><button type="submit" class="watch" id="tip-submit">Submit tip</button></div>
+        <p class="tipstatus" id="tip-status" role="status"></p>
+      </form></div>
+      <h3>Tips on file</h3><ul class="tips" id="tips-list">${tipsListHTML()}</ul>`;
   } else if (e.type === "redacted") {
     folder.dataset.tab = `Exhibit ${letter(e)}`;
     html = `<h2 id="file-title">Day ${e.day}: Classified</h2><div class="sheet">
@@ -484,10 +532,80 @@ function openFile(e) {
   }
   body.innerHTML = html;
   dlg.showModal();
+  if (e.type === "tipline") wireTipForm();
+}
+
+/* ---------------- the tip line (talks to /api/tips) ---------------- */
+const tips = { list: null, total: 0, failed: false };
+
+function tipsListHTML() {
+  if (tips.failed) return `<li class="empty">Couldn't reach the tip line. Try again later.</li>`;
+  if (!tips.list) return `<li class="empty">Loading&hellip;</li>`;
+  if (!tips.list.length) return `<li class="empty">No tips on file yet. Be the first.</li>`;
+  return tips.list.map(t => `<li><div class="msg">${esc(t.message)}</div>
+    <div class="who">${esc(t.name || "Anonymous")} &middot; ${new Date(t.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</div></li>`).join("");
+}
+
+function renderTipCount() {
+  const el = document.querySelector("[data-tipcount]");
+  if (el) el.textContent = tips.failed ? "Tip line: offline" : `Tips on file: ${tips.total}`;
+}
+
+async function loadTips() {
+  try {
+    const r = await fetch("/api/tips", { headers: { Accept: "application/json" } });
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    Object.assign(tips, { list: data.tips, total: data.total, failed: false });
+  } catch {
+    tips.failed = true;
+  }
+  renderTipCount();
+  const list = document.getElementById("tips-list");
+  if (list) list.innerHTML = tipsListHTML();
+}
+
+function wireTipForm() {
+  const form = document.getElementById("tip-form");
+  const msg = document.getElementById("tip-message");
+  const chars = document.getElementById("tip-chars");
+  const status = document.getElementById("tip-status");
+  const button = document.getElementById("tip-submit");
+  const say = (text, kind) => { status.textContent = text; status.className = `tipstatus ${kind || ""}`; };
+
+  msg.addEventListener("input", () => { chars.textContent = `${msg.value.length} / 500`; });
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (msg.value.trim().length < 3) { say("Write a tip before submitting.", "err"); msg.focus(); return; }
+    button.disabled = true; say("Sending…");
+    try {
+      const r = await fetch("/api/tips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.elements.name.value,
+          message: msg.value,
+          website: form.elements.website.value
+        })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "The tip line is down right now. Try again later.");
+      form.reset(); chars.textContent = "0 / 500";
+      say("Tip received. It goes on file once it's been read.", "ok");
+      tips.total += 1; renderTipCount();
+    } catch (err) {
+      // fetch() throws a TypeError when the network or server can't be reached at all.
+      say(err instanceof TypeError ? "The tip line is down right now. Try again later." : err.message, "err");
+    } finally {
+      button.disabled = false;
+    }
+  });
+  msg.focus();
 }
 
 window.addEventListener("resize", fit);
 fit();
+loadTips();
 </script>
 </body>
 </html>
