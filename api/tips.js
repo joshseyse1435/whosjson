@@ -3,8 +3,9 @@
 //   GET  /api/tips  -> { total, tips: [{ id, name, message, created_at }] }   (approved tips only)
 //   POST /api/tips  <- { name?, message, website? }  -> 201 { ok: true }
 //
-// The database address comes from the DATABASE_URL environment variable,
-// which Vercel sets automatically once a Neon database is connected to the project.
+// The database address comes from an environment variable that Vercel sets when a
+// database is connected to the project: DATABASE_URL (Neon) or POSTGRES_URL (Supabase).
+// Any Postgres database works.
 
 import postgres from "postgres";
 import { createHash } from "node:crypto";
@@ -17,10 +18,11 @@ let ready = null;
 
 function db() {
   if (!sql) {
-    if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
+    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!url) throw new Error("No database connected: set DATABASE_URL or POSTGRES_URL");
     // max: 1 because each serverless function instance handles one request at a time.
-    // prepare: false keeps it compatible with Neon's connection pooler.
-    sql = postgres(process.env.DATABASE_URL, { max: 1, idle_timeout: 20, connect_timeout: 10, prepare: false });
+    // prepare: false keeps it compatible with connection poolers (Supabase, Neon).
+    sql = postgres(url, { max: 1, idle_timeout: 20, connect_timeout: 10, prepare: false });
   }
   // Create the table the first time this instance runs (does nothing if it already exists).
   ready ??= sql.begin(async (tx) => {
@@ -34,6 +36,9 @@ function db() {
     )`;
     await tx`create index if not exists tips_public_idx on tips (approved, created_at desc)`;
     await tx`create index if not exists tips_ip_idx on tips (ip_hash, created_at desc)`;
+    // Lock the table against Supabase's automatic public API. With row-level security on
+    // and no policies, only this server (connecting as the database owner) can read or write it.
+    await tx`alter table tips enable row level security`;
   }).catch((err) => { ready = null; throw err; });
   return ready.then(() => sql);
 }

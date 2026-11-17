@@ -11,7 +11,12 @@ create table if not exists tips (
 create index if not exists tips_public_idx on tips (approved, created_at desc);
 create index if not exists tips_ip_idx on tips (ip_hash, created_at desc);
 
--- Handy queries for the Neon SQL editor:
+-- Keep the table private from Supabase's automatic public API. Our server connects as
+-- the database owner, so it is unaffected.
+alter table tips enable row level security;
+
+-- Handy queries for the SQL editor (Supabase or Neon). In Supabase you can also use the
+-- Table Editor and tick the "approved" checkbox.
 --   See tips waiting for review:  select id, name, message, created_at from tips where not approved order by created_at;
 --   Approve one:                  update tips set approved = true where id = 42;
 --   Delete one:                   delete from tips where id = 42;
